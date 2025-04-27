@@ -1,19 +1,37 @@
 // UserDashboard.js
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CameraView from '../components/CameraView.js';
-import Footer from '../components/Footer.js';
 import '../cssFolder/UserDashboard.css';
 import img1 from '../assets/8334315.png';
+import Spinner from '../components/Spinner.js';
 
 function UserDashboard() {
     const [viewMode, setViewMode] = useState('all'); // 'all' || 'cam1' || 'cam2' || 'cam3' || 'cam4'
     const [username, setUsername] = useState('');
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        const timer = setTimeout(() => setLoading(false), 2000);
+        return () => clearTimeout(timer); // Cleanup timer on unmount
+    }, []);
+    const navigate = useNavigate();
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        console.log(token);
+        if (!token || role !== 'user') {
+            
+            navigate('/login');
+            return;
+        }
+
         const storedUsername = localStorage.getItem('username') || 'User';
         setUsername(storedUsername);
-    }, []);
-
+    }, [navigate]);
+    if (loading) {
+        return <Spinner/>;
+    }
     return (
         <div className="dashboard-container">
             <div className="sidebar" style={{ textAlign: "center" }}>
@@ -27,8 +45,9 @@ function UserDashboard() {
                 <button onClick={() => setViewMode('cam4')}>Camera 4</button>
                 <button onClick={() => setViewMode('all')}>All Cameras</button>
                 <button className="logout-button" onClick={() => {
-                    localStorage.clear();
-                    window.location.href = '/';
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('username');
+                    navigate('/');
                 }}>Logout</button>
             </div>
 
@@ -54,7 +73,6 @@ function UserDashboard() {
 
                 
             </div>
-            <Footer />
         </div>
     );
 }
